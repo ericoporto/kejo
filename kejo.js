@@ -1,6 +1,6 @@
 //kejo.js
 
-export default class kejo {
+export default class KeJo {
   constructor({
     autoupdategamepad, 
     map,
@@ -17,7 +17,7 @@ export default class kejo {
                        'BUTTONA','BUTTONB','BUTTONX','BUTTONY']
 
     //enum containing each key as number
-    this._redrawkey = {
+    this.key = {
         LEFT: 0, UP: 1, RIGHT: 2, DOWN: 3,
         BUTTONA: 4, BUTTONB: 5, BUTTONX: 6, BUTTONY: 7
     },
@@ -101,35 +101,29 @@ export default class kejo {
 
     //configures keyboard key map to internal keys
     for(var ibutton in this.map.k){
-        var keyCodes = this.map.k[ibutton];
-        for(var i=0; i<keyCodes.length; i++){
+      var keyCodes = this.map.k[ibutton];
+      for(var i=0; i<keyCodes.length; i++){
         var keyCode = keyCodes[i];
         this._keyboardMap[keyCode] = this.key[ibutton];
-        }
+      }
     }
 
     //configures gamepad buttons and axes map to internal keys
     for(var ibutton in this.map.g){
-        var gamepadCodes = this.map.g[ibutton];
-        this._gamepadMap[this.key[ibutton]] = this._genericGamepadCheck(gamepadCodes);
+      var gamepadCodes = this.map.g[ibutton];
+      this._gamepadMap[this.key[ibutton]] = this._genericGamepadCheck(gamepadCodes);
     }
 
     //setting inital condition for _previousGamepadKeys
     for(var k in this.key){
-        var kvalue=this.key[k];
-        this._previousGamepadKeys[kvalue]=false;
+      var kvalue=this.key[k];
+      this._previousGamepadKeys[kvalue]=false;
     }
 
-    //setting inital condition for _previousTouchpadKeys
-    for(var k in this.key){
-        var kvalue=this.key[k];
-        this._previousTouchpadKeys[kvalue]=false;
-    }
-
-    window.addEventListener('keyup',  this.onKeyup ,false);
-    window.addEventListener('keydown', this.onKeydown,false);
+    window.addEventListener('keyup',  this.onKeyup.bind(this) ,false);
+    window.addEventListener('keydown', this.onKeydown.bind(this),false);
     if(this._loopUpdateGamepad){
-        setTimeout(this.updateGamepad,1000/60);
+      setTimeout(this.updateGamepad.bind(this),1000/60);
     }
   }
 
@@ -142,15 +136,15 @@ export default class kejo {
 
     if(axesbuttons=='axes'){
       if(moreless == '<'){
-        return function(pad,that){
+        return (pad)=>{
           if ((typeof pad !== 'undefined') && pad != null) {
-            return pad.axes[n] < -that._gamepadDeadzone;
+            return pad.axes[n] < -this._gamepadDeadzone;
           }
         };
       } else {
-        return function(pad){
+        return (pad)=>{
           if ((typeof pad !== 'undefined') && pad != null) {
-            return pad.axes[n] > that._gamepadDeadzone;
+            return pad.axes[n] > this._gamepadDeadzone;
           }
         };
       }
@@ -178,70 +172,67 @@ export default class kejo {
   }
 
   onKeydown(event) {
-    var that = this
-    if(event.keyCode in that._keyboardMap){
+    if(event.keyCode in this._keyboardMap){
       event.preventDefault()
-      if(that._pressed[that._keyboardMap[event.keyCode]] != true){
-        var newEvent = new CustomEvent('ktg_KeyPressed', {
-           'detail': that._KeysString[that._keyboardMap[event.keyCode]]});
+      if(this._pressed[this._keyboardMap[event.keyCode]] != true){
+        var newEvent = new CustomEvent('kejo_KeyPressed', {
+           'detail': this._KeysString[this._keyboardMap[event.keyCode]]});
         window.dispatchEvent(newEvent);
       }
 
-      that._pressed[that._keyboardMap[event.keyCode]] = true;
+      this._pressed[this._keyboardMap[event.keyCode]] = true;
 
-      that._lastInputType = 'keyboard'
+      this._lastInputType = 'keyboard'
     }
   }
 
   onKeyup(event) {
-    var that = this
-    if(event.keyCode in that._keyboardMap){
+    if(event.keyCode in this._keyboardMap){
       event.preventDefault()
-      delete that._pressed[that._keyboardMap[event.keyCode]];
-      var newEvent = new CustomEvent('ktg_KeyReleased', {
-        'detail': that._KeysString[that._keyboardMap[event.keyCode]]});
+      delete this._pressed[this._keyboardMap[event.keyCode]];
+      var newEvent = new CustomEvent('kejo_KeyReleased', {
+        'detail': this._KeysString[this._keyboardMap[event.keyCode]]});
       window.dispatchEvent(newEvent);
-      that._lastInputType = 'keyboard'
+      this._lastInputType = 'keyboard'
     }
   }
 
 
   updateGamepad(){
-    var that = this
     var gamepad = navigator.getGamepads()[0]
     if ((typeof gamepad !== 'undefined') && gamepad != null) {
-      for(var k in that.key){
-        var kvalue=that.key[k]
-        var padkeypressed = that._gamepadMap[kvalue](gamepad)
+      for(var k in this.key){
+        var kvalue=this.key[k]
+        var padkeypressed = this._gamepadMap[kvalue](gamepad)
         //check if key was just pressed
-        if(padkeypressed == true && that._previousGamepadKeys[kvalue] == false){
-          that._pressed[kvalue] = true
-          that._previousGamepadKeys[kvalue] = true
+        if(padkeypressed == true && this._previousGamepadKeys[kvalue] == false){
+          this._pressed[kvalue] = true
+          this._previousGamepadKeys[kvalue] = true
 
-          //throw a ktg event
-          var newEvent = new CustomEvent('ktg_KeyPressed', {
-            'detail': that._KeysString[kvalue]})
+          //throw a kejo event
+          var newEvent = new CustomEvent('kejo_KeyPressed', {
+            'detail': this._KeysString[kvalue]})
           window.dispatchEvent(newEvent)
 
-          that._lastInputType = 'gamepad'
+          this._lastInputType = 'gamepad'
 
         //if it was not, check if it was just released
-      } else if(padkeypressed == false && that._previousGamepadKeys[kvalue] == true){
-          that._previousGamepadKeys[kvalue] = false;
-          delete that._pressed[kvalue]
+      } else if(padkeypressed == false && this._previousGamepadKeys[kvalue] == true){
+          this._previousGamepadKeys[kvalue] = false;
+          delete this._pressed[kvalue]
 
-          //throw a ktg event
-          var newEvent = new CustomEvent('ktg_KeyReleased', {
-            'detail': that._KeysString[kvalue]})
+          //throw a kejo event
+          var newEvent = new CustomEvent('kejo_KeyReleased', {
+            'detail': this._KeysString[kvalue]})
           window.dispatchEvent(newEvent)
 
-          that._lastInputType = 'gamepad'
+          this._lastInputType = 'gamepad'
         }
       }
     }
 
-    if(that._loopUpdateGamepad){
-      setTimeout(that.updateGamepad,1000/60);
+    if(this._loopUpdateGamepad){
+      setTimeout(this.updateGamepad.bind(this),1000/60);
     }
   }
 
@@ -275,8 +266,8 @@ export default class kejo {
 
   destroy() {
     //remove listeners
-    window.removeEventListener('keyup',  this.onKeyup ,false)
-    window.removeEventListener('keydown', this.onKeydown,false)
+    window.removeEventListener('keyup',  this.onKeyup.bind(this) ,false)
+    window.removeEventListener('keydown', this.onKeydown.bind(this),false)
   }
 }
 

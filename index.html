@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Keyboard Touch Gamepad</title>
+    <link rel="stylesheet" type="text/css" href="simple.css">
+    <script>
+      var kejo
+    </script>
+
+    <script type="module">
+    import KeJo from './kejo.js'
+
+    export function writeKeyUp(e){
+        document.getElementById('writer').innerHTML = document.getElementById('writer').innerHTML  + '<br>'+'button released ' + e.detail;
+      }
+    export function writeKeyDown(e){
+        document.getElementById('writer').innerHTML  = document.getElementById('writer').innerHTML  + '<br>'+'button pressed ' + e.detail;
+      }
+
+    kejo = new KeJo
+    
+    window.addEventListener('load', ()=>{
+        window.addEventListener('kejo_KeyReleased',  writeKeyUp,false);
+        window.addEventListener('kejo_KeyPressed', writeKeyDown,false);
+        document.getElementById('writer').innerHTML = document.getElementById('writer').innerHTML  + kejo.getPrintableKeyboardMap().replace(/\n/g, "<br />") +  '<br>' ;
+      }, false)
+
+
+    </script>
+  </head>
+  <body>
+    <header>
+        <h1> kejo.js</h1>
+        A interface for Keyboard Touch and Gamepad input.
+    </header>
+ </br>
+   <div class="center"><a class="btn" href="https://ericoporto.github.io/kejo_js/kejo.js" download>Download kejo.js</a></div>
+
+  <section class="nosupport" hidden>
+    <h4>Apologies.. your browser doesn't support ES Modules. </h4>
+    <p>You may be able to enable them with a flag.</p>
+  </section>
+  <p>
+    Press a key.
+  </p>
+
+  <div id='writer'>
+  </div>
+
+  <footer>
+    <br>MIT License, copyright Érico Vieira Porto 2016</br>
+    <br> more info on the Github repository:
+    <a href="https://github.com/ericoporto/kejo"> github.com/ericoporto/kejo </a>
+  </footer>
+
+
+    <script nomodule>
+      // script only runs browsers that don't support modules (ideally)
+      document.querySelector('.nosupport').hidden = false;
+    </script>
+    <script type=module>
+      // requires modules to hide. (FOUC in non-[nomodule] supporting browsers right now)
+     import {qs} from './qs.js'
+      qs('.nosupport').hidden = true;
+    </script>
+  </body>
+</html>
