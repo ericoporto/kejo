@@ -22,6 +22,10 @@ export default class KeJo {
         BUTTONA: 4, BUTTONB: 5, BUTTONX: 6, BUTTONY: 7
     },
 
+    //when holding, emit a new key down on every refresh rate milissecond
+    //if refresh rate is 0, don't emit a new key down
+    this._KEY_REFRESH_RATE = 0
+
     //
     this._keyboardMap = {}
     this._gamepadMap = {}
@@ -171,13 +175,29 @@ export default class KeJo {
     return char.charCodeAt(0)
   }
 
+  _keyPressedEvent(keyString,refresh){
+    if(refresh==true&&(this._KEY_REFRESH_RATE==0 || !this.isPressed(this.key[keyString]) )){
+      return;
+    }
+
+    var newEvent = new CustomEvent('kejo_KeyPressed', {
+      'detail': keyString});
+    window.dispatchEvent(newEvent);
+
+    setTimeout(this._keyPressedEvent.bind(this),this._KEY_REFRESH_RATE,keyString,true)
+  }
+
+  _keyReleasedEvent(keyString,refresh){
+    var newEvent = new CustomEvent('kejo_KeyReleased', {
+      'detail': keyString});
+    window.dispatchEvent(newEvent);
+  }
+
   onKeydown(event) {
     if(event.keyCode in this._keyboardMap){
       event.preventDefault()
       if(this._pressed[this._keyboardMap[event.keyCode]] != true){
-        var newEvent = new CustomEvent('kejo_KeyPressed', {
-           'detail': this._KeysString[this._keyboardMap[event.keyCode]]});
-        window.dispatchEvent(newEvent);
+        this._keyPressedEvent(this._KeysString[this._keyboardMap[event.keyCode]]);
       }
 
       this._pressed[this._keyboardMap[event.keyCode]] = true;
@@ -190,9 +210,7 @@ export default class KeJo {
     if(event.keyCode in this._keyboardMap){
       event.preventDefault()
       delete this._pressed[this._keyboardMap[event.keyCode]];
-      var newEvent = new CustomEvent('kejo_KeyReleased', {
-        'detail': this._KeysString[this._keyboardMap[event.keyCode]]});
-      window.dispatchEvent(newEvent);
+      this._keyReleasedEvent(this._KeysString[this._keyboardMap[event.keyCode]]);
       this._lastInputType = 'keyboard'
     }
   }
@@ -210,9 +228,7 @@ export default class KeJo {
           this._previousGamepadKeys[kvalue] = true
 
           //throw a kejo event
-          var newEvent = new CustomEvent('kejo_KeyPressed', {
-            'detail': this._KeysString[kvalue]})
-          window.dispatchEvent(newEvent)
+          this._keyPressedEvent(this._KeysString[kvalue])
 
           this._lastInputType = 'gamepad'
 
@@ -222,9 +238,7 @@ export default class KeJo {
           delete this._pressed[kvalue]
 
           //throw a kejo event
-          var newEvent = new CustomEvent('kejo_KeyReleased', {
-            'detail': this._KeysString[kvalue]})
-          window.dispatchEvent(newEvent)
+          this._keyReleasedEvent(this._KeysString[kvalue])
 
           this._lastInputType = 'gamepad'
         }
