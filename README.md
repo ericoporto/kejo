@@ -3,7 +3,7 @@ kejo.js is keyboard and joystick unified library for games html5 games that alre
 
 # how to use
 
-You have to import this module an instantiate it first.
+You have to import this module and instantiate it first.
 
 
     import KeJo from './kejo.js'
